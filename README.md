@@ -1,1 +1,3 @@
-This repository includes all codefiles for Lab Assignements for ECE_6780.
+Name: Mihir Rane
+Unid: U1452353
+This repository is created for Lab Assignments for ECE_6780. 
