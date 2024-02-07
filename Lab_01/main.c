@@ -61,10 +61,11 @@ void SystemClock_Config(void);
   * @retval int
   */
 int led_toggle(void);
+int led_button_toggle(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-HAL_Init(); // Reset of all peripherals, init the Flash and Systick
+	HAL_Init(); // Reset of all peripherals, init the Flash and Systick
 	SystemClock_Config(); //Configure the system clock
 	
 	/* This example uses HAL library calls to control
@@ -78,18 +79,25 @@ HAL_Init(); // Reset of all peripherals, init the Flash and Systick
 	GPIO_SPEED_FREQ_LOW,
 	GPIO_NOPULL};
 	
-	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN | RCC_AHBENR_GPIOAEN; // Enable Registers
 	GPIOC->MODER |= GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0;
 	GPIOC->OTYPER &= ~(GPIO_OTYPER_OT_7 | GPIO_OTYPER_OT_6);
- GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEEDR7 | GPIO_OSPEEDR_OSPEEDR6);
- GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR7 | GPIO_PUPDR_PUPDR6);
- GPIOC->MODER |= GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0;
+ 	GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEEDR7 | GPIO_OSPEEDR_OSPEEDR6);
+ 	GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR7 | GPIO_PUPDR_PUPDR6);
+ 	GPIOC->MODER |= GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0;
+	
+	//Set User Button pin
+	GPIOA->MODER &= ~GPIO_MODER_MODER0;
+  	GPIOA->OSPEEDR &= ~GPIO_OSPEEDR_OSPEEDR0;
+  	GPIOA->PUPDR |= GPIO_PUPDR_PUPDR0_1;
+	
 	GPIOC->BSRR = GPIO_BSRR_BS_6; // Set PC6 high
- GPIOC->BSRR = GPIO_BSRR_BR_7; // Reset PC7 low
+ 	GPIOC->BSRR = GPIO_BSRR_BR_7; // Reset PC7 low
 	//HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC6 & PC7
 	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
- 
+ 	
 	led_toggle(); //Part 1
+	led_button_toggle(); //Part 2
 	       // Add a delay for stability and to avoid CPU hogging
   HAL_Delay(20);
     //}
@@ -139,6 +147,29 @@ int led_toggle(void){
 		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
 		GPIOC->ODR ^= GPIO_ODR_6 | GPIO_ODR_7; //toggle LED pins 6 & 7
 		}
+}
+
+int led_button_toggle(void){
+
+	uint32_t debouncer = 0;
+	debouncer = (debouncer << 1);
+	while(1){
+	debouncer = (debouncer << 1);
+	if ((GPIOA->IDR & GPIO_IDR_0) == 0) { // If input signal is set/high
+		debouncer |= 0x01; // Set lowest bit of bit-vector
+		}
+        // Debounce conditions
+  	if (debouncer == 0xFFFFFFFF) {
+            // This code triggers repeatedly when the button is steady high!
+             
+        	}
+   	else if (debouncer == 0x00000000) {
+            // This code triggers repeatedly when the button is steady low!
+         	}
+	 else if (debouncer == 0x7FFFFFFF){
+		GPIOC->ODR ^= (GPIO_ODR_6 | GPIO_ODR_7);
+   		}
+	}	
 }
 
 void SystemClock_Config(void)
