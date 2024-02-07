@@ -1,6 +1,11 @@
 **********Lab01************
 
 Part 1: Using Registers to toggle Red & Blue LEDs alternately
+-Enabled Registers, LED pins
+-set pins to output, lowspeed and pullup/pulldown
+-Created function led_toggle for toggling logic
 Part 2: Using User Button to toggle Red & Blue LEDS alternately
+-Enabled Registers and set User Button Pin
+-Created function led_button_toggle for debouncing and toggling logic
 
 *********end***************
