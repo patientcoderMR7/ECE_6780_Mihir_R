@@ -60,9 +60,39 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+int led_toggle(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+HAL_Init(); // Reset of all peripherals, init the Flash and Systick
+	SystemClock_Config(); //Configure the system clock
+	
+	/* This example uses HAL library calls to control
+	the GPIOC peripheral. You’ll be redoing this code
+	with hardware register access. */
+	//__HAL_RCC_GPIOC_CLK_ENABLE(); // Enable the GPIOC clock in the RCC
+	
+	// Set up a configuration struct to pass to the initialization function
+	GPIO_InitTypeDef initStr = {GPIO_PIN_6 | GPIO_PIN_7,
+	GPIO_MODE_OUTPUT_PP,
+	GPIO_SPEED_FREQ_LOW,
+	GPIO_NOPULL};
+	
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+	GPIOC->MODER |= GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0;
+	GPIOC->OTYPER &= ~(GPIO_OTYPER_OT_7 | GPIO_OTYPER_OT_6);
+ GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEEDR7 | GPIO_OSPEEDR_OSPEEDR6);
+ GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR7 | GPIO_PUPDR_PUPDR6);
+ GPIOC->MODER |= GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0;
+	GPIOC->BSRR = GPIO_BSRR_BS_6; // Set PC6 high
+ GPIOC->BSRR = GPIO_BSRR_BR_7; // Reset PC7 low
+	//HAL_GPIO_Init(GPIOC, &initStr); // Initialize pins PC6 & PC7
+	//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Start PC8 high
+ 
+	led_toggle(); //Part 1
+	       // Add a delay for stability and to avoid CPU hogging
+  HAL_Delay(20);
+    //}
 
   /* USER CODE END 1 */
 
@@ -89,7 +119,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+  //while (1)
   {
     /* USER CODE END WHILE */
 
@@ -102,6 +132,15 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
+int led_toggle(void){
+		
+		while (1){
+		HAL_Delay(200); // Delay 200ms
+		//HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8 | GPIO_PIN_9);
+		GPIOC->ODR ^= GPIO_ODR_6 | GPIO_ODR_7; //toggle LED pins 6 & 7
+		}
+}
+
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
