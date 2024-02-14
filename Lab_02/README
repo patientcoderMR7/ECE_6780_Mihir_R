@@ -1,0 +1,9 @@
+Lab 02: Interrupts
+
+Part1: Enabling multiple peripheral interrupts and checking process flow
+Configure and toggle all LED pins, Modify Systick Timer and toggle blue led with small delay, and enable EXTI peripheral interrupt to work together in system. 
+Configure button pin as inout with EXTI peripheral, and toggle orange and green LEDs with button press
+
+Part2: Explore Interrupt Nesting & Interrupt Priorities
+Starve interupt by adding a long delay in peripheral interrupt (EXTI)
+As a solution, set the appropriate priorities for all interrupts, so thay all work together without breaking flow (in case of a long running interrupt)
