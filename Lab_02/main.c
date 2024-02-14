@@ -118,11 +118,11 @@ int main(void)
   //Enable the EXTI0 interrupt and set the priority to 1
   NVIC_EnableIRQ(EXTI0_1_IRQn);
 	//Part 2.1: Change Priorities of  EXTI interrupt handler and systick to resolve starving interrupt issue
-	NVIC_SetPriority(EXTI0_1_IRQn, 3);
-  //NVIC_SetPriority(EXTI0_1_IRQn, 1);
+	//NVIC_SetPriority(EXTI0_1_IRQn, 3);
+  NVIC_SetPriority(EXTI0_1_IRQn, 1);
 	
 	//Part 2.2 - Set appropriate priority to systick handler interrupt
-	NVIC_SetPriority(SysTick_IRQn, 2);
+	//NVIC_SetPriority(SysTick_IRQn, 2);
 	
 	
   //Set PC9 Green to High
@@ -152,13 +152,14 @@ void EXTI0_1_IRQHandler(void){
 	//Part2
 	
 	//delay loop
+	*/
 	volatile uint32_t count1 = 0;
 	while (count1 < 1500000) {
 		count1++;// This loop provides a rough delay of 1-2 seconds
   }
 	GPIOC->ODR ^= ((1 << 8) | (1 << 9));
 	//clear flag
-
+	*/
 	//HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
 }
 
