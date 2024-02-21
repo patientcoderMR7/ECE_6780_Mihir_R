@@ -66,6 +66,56 @@ void TIM2_IRQHandler(void){
 	GPIOC->ODR ^= ((1 << 8) | (1 << 9));
 	TIM2->SR = 0x00;
 }
+
+//Function for Alternate conguration for pins 6 and 7 (blue and red leds - timer3 channels )
+void GPIO_Config(void) {
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN; // Enable GPIOC clock
+
+    // Configure PC6 (red LED) and PC7 (blue LED) as alternate function mode
+    GPIOC->MODER &= ~(GPIO_MODER_MODER6_Msk | GPIO_MODER_MODER7_Msk); // Clear bits
+    GPIOC->MODER |= (GPIO_MODER_MODER6_1 | GPIO_MODER_MODER7_1); // Set alternate function mode (AF)
+
+    // Configure PC6 and PC7 for alternate function AF0 (TIM3_CH1 and TIM3_CH2)
+    GPIOC->AFR[0] &= ~((0xF << GPIO_AFRL_AFRL6_Pos) | (0xF << GPIO_AFRL_AFRL7_Pos)); // Clear bits
+    GPIOC->AFR[0] |= (0 << GPIO_AFRL_AFRL6_Pos) | (0 << GPIO_AFRL_AFRL7_Pos); // Set AF0
+
+    // Configure PC6 and PC7 as push-pull outputs
+    GPIOC->OTYPER &= ~(GPIO_OTYPER_OT_6 | GPIO_OTYPER_OT_7); // Push-pull mode
+
+    // Configure PC6 and PC7 as low-speed outputs
+    GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEEDR6_Msk | GPIO_OSPEEDR_OSPEEDR7_Msk); // Clear bits
+
+    // Configure PC6 and PC7 with no pull-up or pull-down
+    GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR6_Msk | GPIO_PUPDR_PUPDR7_Msk); // Clear bits
+}
+
+//Function for Part 2 - Timer 3 and PWM
+void TIM_Config(void) {
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; // Enable Timer 3 clock
+
+    // Set Timer 3's prescaler and auto-reload register (ARR) for 800 Hz PWM frequency
+    TIM3->PSC = 9; // Prescaler value (PSC + 1)
+    TIM3->ARR = 1000; // Auto-reload value (period)
+
+    // Configure Timer 3 channel 1 for PWM Mode 2
+    TIM3->CCMR1 &= ~(TIM_CCMR1_OC1M_Msk); // Clear bits
+    TIM3->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2); // PWM Mode 2
+
+    // Configure Timer 3 channel 2 for PWM Mode 1
+    TIM3->CCMR1 &= ~(TIM_CCMR1_OC2M_Msk); // Clear bits
+    TIM3->CCMR1 |= (TIM_CCMR1_OC2M_0 | TIM_CCMR1_OC2M_1); // PWM Mode 1
+
+    // Enable output for Timer 3 channel 1 and channel 2
+    TIM3->CCER |= (TIM_CCER_CC1E | TIM_CCER_CC2E);
+
+    // Set initial capture/compare values (CCR) for both channels
+    TIM3->CCR1 = 20; // 20% duty cycle for channel 1
+    TIM3->CCR2 = 20; // 20% duty cycle for channel 2
+
+    // Enable Timer 3
+    TIM3->CR1 |= TIM_CR1_CEN;
+}
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -117,6 +167,10 @@ int main(void)
 	TIM2->CR1 |= (1 << 0);
 	//enable NVIC
 	NVIC_EnableIRQ(TIM2_IRQn);
+
+	//Part 2
+	GPIO_Config();
+  	TIM_Config();
   /* USER CODE END Init */
 
   /* Configure the system clock */
