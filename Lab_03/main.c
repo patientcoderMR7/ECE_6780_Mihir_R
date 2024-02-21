@@ -60,6 +60,12 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+//create interrupt function
+void TIM2_IRQHandler(void){
+	
+	GPIOC->ODR ^= ((1 << 8) | (1 << 9));
+	TIM2->SR = 0x00;
+}
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -72,7 +78,45 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+ RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+	
+	// Clear the bits for PC6, PC7, PC8 and PC9
+  GPIOC->MODER &= ~(3 << 12);
+  GPIOC->MODER &= ~(3 << 14);
+  GPIOC->MODER &= ~(3 << 16);
+  GPIOC->MODER &= ~(3 << 18);
+  // Setting PC6, PC7, PC8 and PC9 to General-Purpose Output Mode
+  GPIOC->MODER |= (1 << 12) | (1 << 14) | (1 << 16) | (1 << 18);
+  // Setting PC6, PC7, PC8 and PC9 to Push-Pull Output Type
+  GPIOC->OTYPER &= ~(1 << 6);
+  GPIOC->OTYPER &= ~(1 << 7);
+  GPIOC->OTYPER &= ~(1 << 8);
+  GPIOC->OTYPER &= ~(1 << 9);
+  // Set PC6, PC7, PC8 and PC9 to Low Speed
+  GPIOC->OSPEEDR &= ~(0 << 12);
+  GPIOC->OSPEEDR &= ~(0 << 14);
+  GPIOC->OSPEEDR &= ~(0 << 16);
+  GPIOC->OSPEEDR &= ~(0 << 18);
+  // Clear the bits for PC6, PC7, PC8 and PC9
+  // This also sets the pull-up/pull-down resistors to no pull-up/pull-down since the bits are 00
+  GPIOC->PUPDR &= ~(3 << 12);
+  GPIOC->PUPDR &= ~(3 << 14);
+  GPIOC->PUPDR &= ~(3 << 16);
+  GPIOC->PUPDR &= ~(3 << 18);
 
+	//set green to high for toggling
+	GPIOC->ODR |= (1 << 9);
+	//timer 2 set psc & arr values for 4Hz 
+	TIM2->PSC = 7999;
+	TIM2->ARR = 250;
+	
+	//enable timer interrupt
+	TIM2->DIER = (1 << 0);
+	//enable timer 2
+	TIM2->CR1 |= (1 << 0);
+	//enable NVIC
+	NVIC_EnableIRQ(TIM2_IRQn);
   /* USER CODE END Init */
 
   /* Configure the system clock */
