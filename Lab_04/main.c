@@ -60,10 +60,51 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+//Functions & Global Variable declarations
+void Transmit_char(char transmitted);
+void Transmit_string(char* string);
+
+
+volatile char input;
+volatile int flag;
+volatile char read;
+volatile char received;
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+ RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
+	RCC->APB1ENR  |= RCC_APB1ENR_USART3EN;
+  SystemClock_Config();
 
+	// Configure the leds and button
+	GPIOC->MODER |= (1<<12) | (1<<14) | (1<<16) | (1<<18);
+	GPIOC->MODER &= ~((1<<13) | (1<<15) | (1<<17) | (1<<19));
+	GPIOC->OTYPER &= ~((1<<6) | (1<<7) | (1<<8) | (1<<9));
+	GPIOC->OSPEEDR &= ~((1<<12) | (1<<14) | (1<<16) | (1<<18));
+	GPIOC->PUPDR &= ~((1<<12) | (1<<14) | (1<<16) | (1<<18)
+									| (1<<13) | (1<<15) | (1<<17) | (1<<19));
+	GPIOA->MODER &= ~((1<<0) | (1<<1));
+	GPIOC->OSPEEDR &= ~((1<<0) | (1<<1));
+	GPIOA->PUPDR &= ~((1<<0));
+	GPIOA->PUPDR |= (1<<1);
+	
+	//Alternate mode
+	GPIOB->MODER |= (1<<23) | (1<<21);
+	GPIOB->MODER &= ~((1<<22) | (1<<20));
+	GPIOB->OTYPER &= ~((1<<10) | (1<<11));
+	GPIOB->OSPEEDR &= ~((1<<20) | (1<<21) | (1<<22) | (1<<23));
+	GPIOB->PUPDR &= ~((1<<20) | (1<<21) | (1<<22) | (1<<23));
+	GPIOB->AFR[1] |= (1<<14) | (1<<10);
+	GPIOB->AFR[1] &= ~((1<<15) | (1<<13) | (1<<12) | (1<<11)
+									| (1<<9) | (1<<8));
+	//usart 3 config
+  USART3->BRR = 69;
+	USART3->CR1 |= (1<<2) | (1<<3);
+	USART3->CR1 |= (1<<0);
+	
+	USART3->CR1 |= (1<<5);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -89,13 +130,32 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+ //Reset pins
+GPIOC->ODR &= ~((1<<6) | (1<<7) | (1<<8) | (1<<9));	
+//Part 1: Switch case for all LEDs and error message
+ while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+		if (USART3->ISR & (1<<5))
+		{
+			received = USART3->RDR;
+			switch(received){
+				case 'r':
+				GPIOC->ODR ^= (1<<6);	
+				break;
+				case 'b':
+				GPIOC->ODR ^= (1<<7);
+				break;
+				case 'g':
+				GPIOC->ODR ^= (1<<9);
+				break;
+				case 'o':
+				GPIOC->ODR ^= (1<<8);
+				break;
+				default:
+				Transmit_string("error\n");
+			}					
+		}
+	}
 }
 
 /**
@@ -134,7 +194,27 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+//function for transmitting single character
+void Transmit_char(char transmitted)
+{
+ //check flag
+	while((USART3->ISR & (1<<7)) == 0)
+	{
+	}
+	//read character
+	USART3->TDR = transmitted;
+}
+//function for transmitting string
+void Transmit_string(char* string)
+{
+	int i = 0;
+	while(*string != '\0')
+	{
+		Transmit_char(*string);
+		string++;
+	}
+	Transmit_char('\r');
+}
 /* USER CODE END 4 */
 
 /**
