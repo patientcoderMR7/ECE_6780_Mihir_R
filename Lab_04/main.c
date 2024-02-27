@@ -63,12 +63,13 @@ void SystemClock_Config(void);
 //Functions & Global Variable declarations
 void Transmit_char(char transmitted);
 void Transmit_string(char* string);
-
+void Wait_for_input(void);
+void led_character_toggle(void);
 
 volatile char input;
 volatile int flag;
 volatile char read;
-volatile char received;
+volatile char received, received1, received2;
 
 int main(void)
 {
@@ -108,6 +109,9 @@ USART3->CR1 |= (1<<2) | (1<<3);
 USART3->CR1 |= (1<<0);
 Set Interupt
 USART3->CR1 |= (1<<5);
+//Enable Interrupt & Set priority
+NVIC_EnableIRQ(29);
+NVIC_SetPriority(29,1);
 /* USER CODE END 1 */
 
 /* MCU Configuration--------------------------------------------------------*/
@@ -138,29 +142,12 @@ GPIOC->ODR &= ~((1<<6) | (1<<7) | (1<<8) | (1<<9));
 //Part 1: Switch case for all LEDs and error message
 while (1)
 {
-	//check status flag and read data register rxne bit
-	if (USART3->ISR & (1<<5))
-		{
-			//read character and store
-			received = USART3->RDR;
-			switch(received){
-				case 'r':
-				GPIOC->ODR ^= (1<<6);	
-				break;
-				case 'b':
-				GPIOC->ODR ^= (1<<7);
-				break;
-				case 'g':
-				GPIOC->ODR ^= (1<<9);
-				break;
-				case 'o':
-				GPIOC->ODR ^= (1<<8);
-				break;
-				default:
-				Transmit_string("error\n");
-			}					
-		}
-	}
+	//Part 1 function
+	//led_character_toggle();
+	//Part 2
+	Transmit_string("Please enter input\r\nPress r or b to select one led.\r\n Then press 0,1 or 2 to - On,Off,Toggle\n\r");
+	Wait_for_input();
+	
 }
 /**
   * @brief System Clock Configuration
@@ -198,6 +185,31 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+//part 1 function
+void led_character_toggle(){
+	//check the status flag and check receive data register bit for not empty
+	if (USART3->ISR & (1<<5))
+		{
+			//read character and store
+			received = USART3->RDR;
+			switch(received){
+				case 'r':
+				GPIOC->ODR ^= (1<<6);	
+				break;
+				case 'b':
+				GPIOC->ODR ^= (1<<7);
+				break;
+				case 'g':
+				GPIOC->ODR ^= (1<<9);
+				break;
+				case 'o':
+				GPIOC->ODR ^= (1<<8);
+				break;
+				default:
+				Transmit_string("error\n");
+			}					
+		}
+}
 //function for transmitting single character
 void Transmit_char(char transmitted)
 {
@@ -220,6 +232,97 @@ void Transmit_string(char* string)
 	}
 	Transmit_char('\r');
 }
+
+void Wait_for_input(void)
+{
+	while (!(USART3->ISR & USART_ISR_RXNE))
+    {
+    }
+    // Read the character
+    input = USART3->RDR;
+}
+//Define Interrupt function for USART3 Interrupt Handler. Implement Part 2 logic for Red & Blue LEDs
+void USART3_4_IRQHandler(void)
+{
+    if (USART3->ISR & USART_ISR_RXNE)
+    {
+        if (flag == 0) // First character
+        {
+            received1 = USART3->RDR; // Read first character
+            flag = 1; // Set flag to indicate the first character received
+        }
+        else // Second character
+        {
+            received2 = USART3->RDR; // Read second character
+            flag = 0; // Reset flag for next command
+            //
+            switch (received1)
+            {
+                case 'r':
+                case 'R':
+                    // Command for red LED
+                    if (received2 == '0')
+                    {
+                        // Turn off red LED
+                        GPIOC->ODR &= ~(1 << 6);
+                        Transmit_string("Turn off red LED\n");
+                    }
+                    else if (received2 == '1')
+                    {
+                        // Turn on red LED
+                        GPIOC->ODR |= (1 << 6);
+                        Transmit_string("Turn on red LED\n");
+                    }
+                    else if (received2 == '2')
+                    {
+                        // Toggle red LED
+                        GPIOC->ODR ^= (1 << 6);
+                        Transmit_string("Toggle red LED\n");
+                    }
+                    else
+                    {
+                        // Invalid command
+                        Transmit_string("Invalid command for red LED\n");
+                    }
+                    break;
+                case 'b':
+                case 'B':
+                    // Command for blue LED
+                    if (received2 == '0')
+                    {
+                        // Turn off blue LED
+                        GPIOC->ODR &= ~(1 << 7);
+                        Transmit_string("Turn off blue LED\n");
+                    }
+                    else if (received2 == '1')
+                    {
+                        // Turn on blue LED
+                        GPIOC->ODR |= (1 << 7);
+                        Transmit_string("Turn on blue LED\n");
+                    }
+                    else if (received2 == '2')
+                    {
+                        // Toggle blue LED
+                        GPIOC->ODR ^= (1 << 7);
+                        Transmit_string("Toggle blue LED\n");
+                    }
+                    else
+                    {
+                        // Invalid command
+                        Transmit_string("Invalid command for blue LED\n");
+                    }
+                    break;
+                default:
+                	// Unknown command
+			Transmit_string("\rError\n");
+                    	//Transmit_string("Unknown command\n\rError. Please read carefully and give the right input!!\n\r");
+			//Transmit_string("Please enter input\r\nPress r or b to select one led.\r\n Then press 0,1 or 2 to - On,Off,Toggle\n\r");
+                	break;
+            }
+        }
+    }
+}
+
 /* USER CODE END 4 */
 
 /**
