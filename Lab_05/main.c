@@ -49,6 +49,9 @@
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void GPIO_Init(void);
+int32_t read_x_data();
+int32_t read_y_data();
+void write_data(volatile uint32_t input_address));
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -236,6 +239,99 @@ GPIOC->ODR |= (1<<0);
 GPIOC->ODR &= ~((1<<6) | (1<<7) | (1<<8) | (1<<9));
 //Pb15 Input mode 
 GPIOB->ODR &= ~((1<<30) | (1<<31));
+}
+
+void write_data(volatile uint32_t input_address)
+{
+	// Set the transaction parameters in the CR2 register
+	I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
+
+	// Set the number of bytes to transmit=1.
+	I2C2->CR2 |= (1 << 16) | (0x69 << 1);
+
+	// Set the RD_WRN bit to indicate a write operation
+	I2C2->CR2 &= ~(1<<10);
+
+	// Set the START bit
+	I2C2->CR2 |= (1<<13);
+
+	// Wait until either of the TXIS (Transmit Register Empty/Ready) or NACKF (Slave Not
+	// Acknowledge) flags a reset.
+	while (!(I2C2->ISR & I2C_ISR_TXIS)){};
+	if (I2C2->ISR & I2C_ISR_NACKF){
+		GPIOC->ODR |= (1<<7);
+	}
+	// write CTRL_REG1 into I2C transmit register
+	I2C2->TXDR |= input_address;
+	while (!(I2C2->ISR & I2C_ISR_TC)){};
+		  // Set the STOP bit 
+	I2C2->CR2 |= I2C_CR2_STOP;
+}
+
+int32_t read_x_data()
+{
+	int16_t x_data;
+	write_data(0xA8);
+
+	// Enable the X and Y sensing axes in the CTRL_REG1 register
+	I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
+
+	// Set the sensor in to “normal or sleep mode” using the PD bit in the CTRL_REG1 register
+	I2C2->CR2 |= (2 << 16) | (0x69 << 1);
+
+	// Set the RD_WRN bit to indicate a read operation// reset RD_WRN to read
+	I2C2->CR2 |= (1<<10);
+
+	// Set the START bit
+	I2C2->CR2 |= (1<<13);
+
+	// Wait until either of the RXNE (Receive Register Not Empty) or NACKF 
+	while (!(I2C2->ISR & I2C_ISR_RXNE))
+		;
+	if (I2C2->ISR & I2C_ISR_NACKF)
+		GPIOC->ODR |= (1<<7);
+	x_data = I2C2->RXDR;
+	while (!(I2C2->ISR & I2C_ISR_RXNE))
+		;
+	if (I2C2->ISR & I2C_ISR_NACKF)
+		GPIOC->ODR |= (1<<7);
+	x_data |= (I2C2->RXDR << 8);
+	while (!(I2C2->ISR & I2C_ISR_TC))
+		; /* Wait for TC */
+	return x_data;
+}
+
+int32_t read_y_data()
+{
+	int16_t y_data;
+	write_data(0xAA);
+
+	// Reload the CR2 register with the same parameters as before
+	I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
+
+	// Set the sensor in to “normal or sleep mode” using the PD bit in the CTRL_REG1 register
+	I2C2->CR2 |= (2 << 16) | (0x69 << 1);
+
+	// Set the RD_WRN bit to indicate a write operation.
+	I2C2->CR2 |= (0<<10);
+
+	// Set the START bit again to perform a I2C restart condition
+	I2C2->CR2 |= (1<<13);
+
+	// Wait until either of the RXNE (Receive Register Not Empty) or NACKF 
+	while (!(I2C2->ISR & I2C_ISR_RXNE)){};
+	if (I2C2->ISR & I2C_ISR_NACKF){
+		GPIOC->ODR |= (1<<7);
+	}
+	y_data = I2C2->RXDR;
+	while (!(I2C2->ISR & I2C_ISR_RXNE)){}
+		;
+	if (I2C2->ISR & I2C_ISR_NACKF)
+		GPIOC->ODR |= (1<<7);
+	y_data |= (I2C2->RXDR << 8);
+	while (!(I2C2->ISR & I2C_ISR_TC)){}
+		;
+	return y_data;
 }
 /* USER CODE END 4 */
 
