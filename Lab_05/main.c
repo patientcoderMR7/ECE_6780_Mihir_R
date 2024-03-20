@@ -141,6 +141,8 @@ else{
 I2C2->CR2 |= (1<<14);
 */
 
+	
+	
 /* USER CODE END 1 */
 
 /* MCU Configuration--------------------------------------------------------*/
@@ -161,18 +163,78 @@ HAL_Init();
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
+	//Part 2
+	// Enable the X and Y sensing axes in the CTRL_REG1 register
+	I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0));
 
-  /* USER CODE END 2 */
+	// Set the sensor in to “normal or sleep mode” using the PD bit in the CTRL_REG1 register
+	I2C2->CR2 |= (2 << 16) | (0x69 << 1);
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
+	// All other bits in the CTRL_REG1 register should be set to 0. These place the device in the
+	// default low-speed mode
+	I2C2->CR2 |= (1<<13);;
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+	// Wait until either of the TXIS (Transmit Register Empty/Ready) or NACKF 
+	while (!(I2C2->ISR & I2C_ISR_TXIS))
+		;
+	if (I2C2->ISR & I2C_ISR_NACKF)
+		GPIOC->ODR |= (1<<7);  // Error State
+	// Write CTRL_REG1 into I2C transmit register
+	I2C2->TXDR |= 0x20;
+
+	// Wait until either of the TXIS (Transmit Register Empty/Ready) or NACKF 
+	while (!(I2C2->ISR & I2C_ISR_TXIS))
+		;
+	if (I2C2->ISR & I2C_ISR_NACKF)
+		GPIOC->ODR |= (1<<7);
+	// Write the address of the “WHO_AM_I” register into the I2C transmit register. (TXDR)
+	I2C2->TXDR |= 0xB;
+	while (!(I2C2->ISR & I2C_ISR_TC))
+		; /* Wait for TC */
+
+	// Initialize the L3GD20 gyroscope sensor to read the X and Y axes
+	int x, y;
+	while (1)
+	{
+		x = read_x_data(); // Read and write
+		y = read_y_data(); // Read and write
+
+		int16_t threshold = 0x01FF; // This will turn LED on
+
+		if (abs(x) > threshold | abs(y) > threshold)
+		{
+			if (abs(x) > abs(y))
+			{
+				if(x>threshold){
+					GPIOC->ODR |= (1<<8);}
+				else{
+					GPIOC->ODR &= ~(1<<8);
+				}
+				if(x< -threshold){
+				GPIOC->ODR |= (1<<9);
+				}
+				else{
+					GPIOC->ODR &= ~(1<<9);
+				}
+			}
+			else
+			{
+				if(y>threshold){
+					GPIOC->ODR |= (1<<6);}
+				else{
+					GPIOC->ODR &= ~(1<<6);
+				}
+				if(y< -threshold){
+				GPIOC->ODR |= (1<<6);
+				}
+				else{
+					GPIOC->ODR &= ~(1<<7);
+				}
+			}
+		}
+
+		HAL_Delay(100);
+	}
 }
 
 /**
