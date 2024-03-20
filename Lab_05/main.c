@@ -75,7 +75,8 @@ GPIOC->MODER &= ~((1<<13) | (1<<15) | (1<<17) | (1<<19) | (1<<1));
 GPIOC->OTYPER &= ~((1<<0) | (1<<6) | (1<<7) | (1<<8) | (1<<9));
 GPIOC->OSPEEDR &= ~((1<<0) |(1<<12) | (1<<14) | (1<<16) | (1<<18));
 GPIOC->PUPDR &= ~((1<<0) |(1<<12) | (1<<14) | (1<<16) | (1<<18)	| (1<<1) | (1<<13) | (1<<15) | (1<<17) | (1<<19));
-//Part 1
+//Part1
+/*
 GPIO_Init(); //configure required pins in alternate modes and output modes
 //i2c config
 I2C2->TIMINGR |= ((0x01<<28)| (0x04<<20) | (0x02<<16) | (0xF<<8) | (0x13<<0)); //set timing parameters for 100Khz
@@ -88,7 +89,7 @@ I2C2->CR2 = 0;
 I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0)); //clear sadd and nbyte 
 I2C2->CR2 |= ((0x69 << 1)); //set sadd (slave address)
 I2C2->CR2 |= (1<<16); //set nbytes =1
-I2C2->CR2 |= (1<<10); //set rd_wrn for write
+I2C2->CR2 |= (0<<10); //set rd_wrn for write
 I2C2->CR2 |= (1<<13); //set start bit
 	
 //STEP 2: Check status of NACKF (not set)and TXIS(set) & step 3 (address of who register)
@@ -108,7 +109,7 @@ while (!(I2C2->ISR & I2C_ISR_TC)) {}
 I2C2->CR2 &= ~((0x7F << 16) | (0x3FF << 0)); //clear sadd and nbytes
 I2C2->CR2 |= ((0x69 << 1)); //set sadd
 I2C2->CR2 |= (1<<16); //set nbytes =1
-I2C2->CR2 |= (0<<10); //set rd_wrn for read
+I2C2->CR2 |= (1<<10); //set rd_wrn for read
 	
 //restart
 I2C2->CR2 |= (1<<13); //set start bit
@@ -135,7 +136,8 @@ else{
  
 //STEP 9 SET STOP BIT
 I2C2->CR2 |= (1<<14);
- 
+*/
+
 /* USER CODE END 1 */
 
 /* MCU Configuration--------------------------------------------------------*/
@@ -232,6 +234,8 @@ GPIOB->AFR[1] &= ~((0<<15) | (0<<13) | (0<<14) | (0<<21) | (0<<22) | (0<<23));
 GPIOB->ODR |= (1<<14);
 GPIOC->ODR |= (1<<0);
 GPIOC->ODR &= ~((1<<6) | (1<<7) | (1<<8) | (1<<9));
+//Pb15 Input mode 
+GPIOB->ODR &= ~((1<<30) | (1<<31));
 }
 /* USER CODE END 4 */
 
