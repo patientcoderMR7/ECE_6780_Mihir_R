@@ -51,7 +51,7 @@ void SystemClock_Config(void);
 void LED_Init(void);
 void ADC_Init(void);
 uint16_t ADC_Read(void);
-uint16_t ADC_Read(void);
+void DAC_Init(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -65,104 +65,109 @@ uint16_t ADC_Read(void);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-  RCC->AHBENR |= RCC_AHBENR_GPIOCEN; //enable GPIOC clock
-		RCC->AHBENR |= RCC_AHBENR_GPIOAEN; // Enable GPIOA clock
-		RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC1 clock
-  LED_Init();
-  /* USER CODE END 1 */
+  	/* USER CODE BEGIN 1 */
+	RCC->AHBENR |= RCC_AHBENR_GPIOCEN; //enable GPIOC clock
+	RCC->AHBENR |= RCC_AHBENR_GPIOAEN; // Enable GPIOA clock
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC1 clock
+	LED_Init();
+  	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+  	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+  	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+  	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+  	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+  	/* Configure the system clock */
+  	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+  	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+  	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
+  	/* Initialize all configured peripherals */
+  	/* USER CODE BEGIN 2 */
 
-  /* USER CODE END 2 */
+  	/* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-  //Read ADC value
-    uint16_t adcValue = ADC_Read();  // Turn on/off LEDs based on ADC value
-        if (adcValue >= 10) {
-            GPIOC->ODR |= (1<<6); // Turn on LED connected to pin PC6
-        } else {
-            GPIOC->ODR |= (0<<6); // Turn off LED connected to pin PC6
-        }
-        if (adcValue >= 20) {
-            GPIOC->ODR |= (1<<7); // Turn on LED connected to pin PC7
-        } else {
-            GPIOC->ODR |= (0<<7); // Turn off LED connected to pin PC7
-        }
-        if (adcValue >= 30) {
-            GPIOC->ODR |= (1<<8); // Turn on LED connected to pin PC8
-        } else {
-            GPIOC->ODR |= (0<<8); // Turn off LED connected to pin PC8
-        }
-        if (adcValue >= 40) {
-            GPIOC->ODR |= (1<<9); // Turn on LED connected to pin PC9
-        } else {
-            GPIOC->ODR |= (0<<9); // Turn off LED connected to pin PC9
-        }
-    }
-    /* USER CODE END WHILE */
+  	/* Infinite loop */
+  	/* USER CODE BEGIN WHILE */
+  	while (1)
+  	{
+  		//Read ADC value
+    		uint16_t adcValue = ADC_Read();  // Turn on/off LEDs based on ADC value
+        	if (adcValue >= 10) {
+            		GPIOC->ODR |= (1<<6); // Turn on LED connected to pin PC6
+        	} 
+		else {
+            		GPIOC->ODR |= (0<<6); // Turn off LED connected to pin PC6
+        	}
+        	if (adcValue >= 20) {
+            		GPIOC->ODR |= (1<<7); // Turn on LED connected to pin PC7
+        	} 
+		else {
+            		GPIOC->ODR |= (0<<7); // Turn off LED connected to pin PC7
+        	}
+        	if (adcValue >= 30) {
+            		GPIOC->ODR |= (1<<8); // Turn on LED connected to pin PC8
+        	} 
+		else {
+            		GPIOC->ODR |= (0<<8); // Turn off LED connected to pin PC8
+        	}
+        	if (adcValue >= 40) {
+            		GPIOC->ODR |= (1<<9); // Turn on LED connected to pin PC9
+        	} 
+		else {
+            		GPIOC->ODR |= (0<<9); // Turn off LED connected to pin PC9
+        	}
+    	}	
+    	/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
+    	/* USER CODE BEGIN 3 */
+  
+  	/* USER CODE END 3 */
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	/**
+  	* @brief System Clock Configuration
+  	* @retval None
+  	*/
+	void SystemClock_Config(void)
+	{
+  		RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  		RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  		/** Initializes the RCC Oscillators according to the specified parameters
+  		* in the RCC_OscInitTypeDef structure.
+  		*/
+  		RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  		RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  		RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  		RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  		if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  		{
+    			Error_Handler();
+  		}
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  		/** Initializes the CPU, AHB and APB buses clocks
+  		*/
+  		RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1;
+  		RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  		RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  		RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+
+  		if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  		{
+    			Error_Handler();
+  		}
+	}
 }
 
 /* USER CODE BEGIN 4 */
+//function for LED initialization
 void LED_Init(void) {
      // Enable GPIOC clock
     
@@ -174,28 +179,25 @@ void LED_Init(void) {
 
 }
 
+//Function for ADC initialization, calibration, and enable
 void ADC_Init(void) {
-    
-    GPIOC->MODER |= GPIO_MODER_MODER0; // Set PC0 as analog mode
-			
-		//set adc 8 bit bit 3&4, continuos conversion mode bit13, hardware trigge disabled - 10,11
-		ADC1->CFGR1 |= ((1<<4) | (1<<3)| (1<<13) | (0<<10) | (0<<11));
-	
-		ADC1->CHSELR |= (1<<10); //enable input channel 10 for pin 0
-  ADC1->CR |= (0<<0); //clear aden
-		ADC1->CFGR1 |= (0<<0); //clear dmaen
+	GPIOC->MODER |= GPIO_MODER_MODER0; // Set PC0 as analog mode
+	//set adc 8 bit bit 3&4, continuos conversion mode bit13, hardware trigge disabled - 10,11
+	ADC1->CFGR1 |= ((1<<4) | (1<<3)| (1<<13) | (0<<10) | (0<<11));
+	ADC1->CHSELR |= (1<<10); //enable input channel 10 for pin 0
+  	ADC1->CR |= (0<<0); //clear aden
+	ADC1->CFGR1 |= (0<<0); //clear dmaen
 		
 	//ADC calibration
 		if ((ADC1->CR & ADC_CR_ADEN) != 0)
-	{
-		ADC1->CR |= ADC_CR_ADDIS; //set ADDIS
-	}
+		{
+			ADC1->CR |= ADC_CR_ADDIS; //set ADDIS
+		}
 		while ((ADC1->CR & ADC_CR_ADEN) != 0){};
  
 		ADC1->CFGR1 &= ~ADC_CFGR1_DMAEN; //clear DMAEN
 		ADC1->CR |= ADC_CR_ADCAL; //set ADCAL
 	
-	 
 		while ((ADC1->CR & ADC_CR_ADCAL) != 0){}; 
 		if ((ADC1->ISR & ADC_ISR_ADRDY) != 0)
 		{
@@ -203,17 +205,16 @@ void ADC_Init(void) {
 		}
 		ADC1->CR |= ADC_CR_ADEN; //enable ADCEN
 		while ((ADC1->ISR & ADC_ISR_ADRDY) == 0){};
-	}
+}
 
 // Function to read ADC value
 uint16_t ADC_Read(void) {
-    ADC1->CR |= ADC_CR_ADSTART; // Start conversion
+	ADC1->CR |= ADC_CR_ADSTART; // Start conversion
     
-    while (!(ADC1->ISR & ADC_ISR_EOC)){}; // Wait until the conversion is complete
+	while (!(ADC1->ISR & ADC_ISR_EOC)){}; // Wait until the conversion is complete
     
-    return ADC1->DR; // Return converted value
+	return ADC1->DR; // Return converted value
 }
-
 
 /* USER CODE END 4 */
 
