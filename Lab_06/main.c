@@ -90,11 +90,21 @@ int main(void)
 
   	/* Initialize all configured peripherals */
   	/* USER CODE BEGIN 2 */
-
+	//Part 2
+	DAC_Init();
+	// Sine Wave: 8-bit, 32 samples/cycle
+	const uint8_t sine_table[32] = {127,151,175,197,216,232,244,251,254,251,244,232,216,197,175,151,127,102,78,56,37,21,9,2,0,2,9,21,37,56,78,102};
+	// Triangle Wave: 8-bit, 32 samples/cycle
+	const uint8_t triangle_table[32] = {0,15,31,47,63,79,95,111,127,142,158,174,190,206,222,238,254,238,222,206,190,174,158,142,127,111,95,79,63,47,31,15};
+	// Sawtooth Wave: 8-bit, 32 samples/cycle
+	const uint8_t sawtooth_table[32] = {0,7,15,23,31,39,47,55,63,71,79,87,95,103,111,119,127,134,142,150,158,166,174,182,190,198,206,214,222,230,238,246};
+	uint8_t index = 0;
   	/* USER CODE END 2 */
 
   	/* Infinite loop */
   	/* USER CODE BEGIN WHILE */
+	//Part 1: ADC
+	/*
   	while (1)
   	{
   		//Read ADC value
@@ -123,7 +133,17 @@ int main(void)
 		else {
             		GPIOC->ODR |= (0<<9); // Turn off LED connected to pin PC9
         	}
-    	}	
+    	}
+     	*/
+	//Part 2: DAC
+	while (1) {			
+        // Write the next value in the wave-table to the DAC data register
+        	DAC->DHR8R1 = triangle_table[index];
+		HAL_Delay(1);
+        // Increment index for next value
+        	index = (index + 1) % 32;		
+        }
+	
     	/* USER CODE END WHILE */
 
     	/* USER CODE BEGIN 3 */
@@ -214,6 +234,17 @@ uint16_t ADC_Read(void) {
 	while (!(ADC1->ISR & ADC_ISR_EOC)){}; // Wait until the conversion is complete
     
 	return ADC1->DR; // Return converted value
+}
+
+// Function to initialize DAC
+void DAC_Init(void) {
+	//RCC->APB1ENR |= RCC_APB1ENR_DACEN; // Enable DAC clock
+	// Configure GPIO pin PA5 as analog mode (DAC_OUT2)
+   	GPIOA->MODER |= GPIO_MODER_MODER5; // Set PA5 as analog mode
+	// Set DAC channel 2 to software trigger mode
+	DAC->CR |= DAC_CR_TEN2 | DAC_CR_TSEL2_1; // Enable trigger and select software trigger
+	DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;
+	DAC->CR |= DAC_CR_EN2; // Enable DAC channel 2
 }
 
 /* USER CODE END 4 */
