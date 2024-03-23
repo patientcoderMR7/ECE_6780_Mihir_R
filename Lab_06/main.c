@@ -48,7 +48,10 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void LED_Init(void);
+void ADC_Init(void);
+uint16_t ADC_Read(void);
+uint16_t ADC_Read(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -63,7 +66,10 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  RCC->AHBENR |= RCC_AHBENR_GPIOCEN; //enable GPIOC clock
+		RCC->AHBENR |= RCC_AHBENR_GPIOAEN; // Enable GPIOA clock
+		RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC1 clock
+  LED_Init();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,6 +97,29 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  //Read ADC value
+    uint16_t adcValue = ADC_Read();  // Turn on/off LEDs based on ADC value
+        if (adcValue >= 10) {
+            GPIOC->ODR |= (1<<6); // Turn on LED connected to pin PC6
+        } else {
+            GPIOC->ODR |= (0<<6); // Turn off LED connected to pin PC6
+        }
+        if (adcValue >= 20) {
+            GPIOC->ODR |= (1<<7); // Turn on LED connected to pin PC7
+        } else {
+            GPIOC->ODR |= (0<<7); // Turn off LED connected to pin PC7
+        }
+        if (adcValue >= 30) {
+            GPIOC->ODR |= (1<<8); // Turn on LED connected to pin PC8
+        } else {
+            GPIOC->ODR |= (0<<8); // Turn off LED connected to pin PC8
+        }
+        if (adcValue >= 40) {
+            GPIOC->ODR |= (1<<9); // Turn on LED connected to pin PC9
+        } else {
+            GPIOC->ODR |= (0<<9); // Turn off LED connected to pin PC9
+        }
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -134,6 +163,57 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void LED_Init(void) {
+     // Enable GPIOC clock
+    
+    // Set PC6, PC7, PC8, PC9 as output
+    GPIOC->MODER |= (GPIO_MODER_MODER6_0 | GPIO_MODER_MODER7_0 | GPIO_MODER_MODER8_0 | GPIO_MODER_MODER9_0);
+    
+    // No pull-up/down resistors for PC6, PC7, PC8, PC9
+    GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPDR6 | GPIO_PUPDR_PUPDR7 | GPIO_PUPDR_PUPDR8 | GPIO_PUPDR_PUPDR9);
+
+}
+
+void ADC_Init(void) {
+    
+    GPIOC->MODER |= GPIO_MODER_MODER0; // Set PC0 as analog mode
+			
+		//set adc 8 bit bit 3&4, continuos conversion mode bit13, hardware trigge disabled - 10,11
+		ADC1->CFGR1 |= ((1<<4) | (1<<3)| (1<<13) | (0<<10) | (0<<11));
+	
+		ADC1->CHSELR |= (1<<10); //enable input channel 10 for pin 0
+  ADC1->CR |= (0<<0); //clear aden
+		ADC1->CFGR1 |= (0<<0); //clear dmaen
+		
+	//ADC calibration
+		if ((ADC1->CR & ADC_CR_ADEN) != 0)
+	{
+		ADC1->CR |= ADC_CR_ADDIS; //set ADDIS
+	}
+		while ((ADC1->CR & ADC_CR_ADEN) != 0){};
+ 
+		ADC1->CFGR1 &= ~ADC_CFGR1_DMAEN; //clear DMAEN
+		ADC1->CR |= ADC_CR_ADCAL; //set ADCAL
+	
+	 
+		while ((ADC1->CR & ADC_CR_ADCAL) != 0){}; 
+		if ((ADC1->ISR & ADC_ISR_ADRDY) != 0)
+		{
+			ADC1->ISR |= ADC_ISR_ADRDY;
+		}
+		ADC1->CR |= ADC_CR_ADEN; //enable ADCEN
+		while ((ADC1->ISR & ADC_ISR_ADRDY) == 0){};
+	}
+
+// Function to read ADC value
+uint16_t ADC_Read(void) {
+    ADC1->CR |= ADC_CR_ADSTART; // Start conversion
+    
+    while (!(ADC1->ISR & ADC_ISR_EOC)){}; // Wait until the conversion is complete
+    
+    return ADC1->DR; // Return converted value
+}
+
 
 /* USER CODE END 4 */
 
