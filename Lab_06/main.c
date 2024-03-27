@@ -136,12 +136,15 @@ int main(void)
     	}
      	*/
 	//Part 2: DAC
-	while (1) {			
-        // Write the next value in the wave-table to the DAC data register
-        	DAC->DHR8R1 = triangle_table[index];
+	while (1) {		
 		HAL_Delay(1);
-        // Increment index for next value
-        	index = (index + 1) % 32;		
+        // Write the next value in the wave-table to the DAC data register
+		if(index == 32){
+			index = 0; //reset cycle 
+		}
+        	DAC->DHR8R2 = sine_table[index];
+		index = (index + 1); // Increment index for next value
+        			
         }
 	
     	/* USER CODE END WHILE */
@@ -242,7 +245,6 @@ void DAC_Init(void) {
 	// Configure GPIO pin PA5 as analog mode (DAC_OUT2)
    	GPIOA->MODER |= GPIO_MODER_MODER5; // Set PA5 as analog mode
 	// Set DAC channel 2 to software trigger mode
-	DAC->CR |= DAC_CR_TEN2 | DAC_CR_TSEL2_1; // Enable trigger and select software trigger
 	DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG2;
 	DAC->CR |= DAC_CR_EN2; // Enable DAC channel 2
 }
