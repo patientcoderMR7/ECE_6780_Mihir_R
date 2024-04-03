@@ -160,7 +160,7 @@ void PI_update(void) {
      */
     
     /// TODO: calculate error signal and write to "error" variable
-    error = target_rpm - (motor_speed >> 1);
+    error = target_rpm - (motor_speed / 6);
 	
     /* Hint: Remember that your calculated motor speed may not be directly in RPM!
      *       You will need to convert the target or encoder speeds to the same units.
@@ -185,7 +185,7 @@ void PI_update(void) {
     
     /// TODO: Calculate proportional portion, add integral and write to "output" variable
     //int16_t output = 0; // Change this!
-    int16_t output = Kp * error + error_integral;
+    int16_t output = (Kp * error ) + error_integral;
 		
     /* Because the calculated values for the PI controller are significantly larger than 
      * the allowable range for duty cycle, you'll need to divide the result down into 
@@ -204,16 +204,16 @@ void PI_update(void) {
      */
 
      /// TODO: Divide the output into the proper range for output adjustment
-     output >>= 5;
+     output >>= 3;
 		 
      /// TODO: Clamp the output value between 0 and 100 
     if (output > 100)
-			output = 100;
-		if(output < 0)
-			output = 0;
+	output = 100;
+    if(output < 0)
+	output = 0;
 		
     pwm_setDutyCycle(output);
-    duty_cycle = output;            // For debug viewing
+    duty_cycle = output; // For debug viewing
 
     // Read the ADC value for current monitoring, actual conversion into meaningful units 
     // will be performed by STMStudio
