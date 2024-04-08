@@ -1,0 +1,12 @@
+U1452353
+Mihir Rane
+Postlab 07
+
+1. What gain parameters did you end up using for your PI controller?
+• Describe the response of the system to speed changes.
+
+For the PID controller, 2 Gain parameters were changed and fine-tuned to achieve effective motor control. These parameters include:
+Proportional Gain (Kp):
+Adjusting the proportional gain affects the immediate response of the system to errors in motor speed. Higher values of Kp result in stronger corrections, while lower values provide more stability but may lead to slower response times.
+Integral Gain (Ki):
+Tuning the integral gain influences the system's ability to eliminate steady-state error over time. Higher values of Ki lead to faster error correction but can also increase the risk of integral windup.
